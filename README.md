@@ -12,8 +12,13 @@ kaggle competitions download -c synthetic-image-classification
 brew install pyenv
 pyenv init
 # copy the output of above into .zhsrc (or whatever shell you use)
+
 pyenv install 3.7.4
 pyenv local
+```
 
+### Install dependencies
+
+```sh
 pip install -r requirements.txt
 ```

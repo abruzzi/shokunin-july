@@ -1,4 +1,4 @@
-kaggle >= 1.5.4
-setuptools >= 41.0.1
-tensorflow >= 1.14.0
-tflearn >= 0.3.2
+kaggle
+tensorflow==2.0.0-beta1
+matplotlib
+pandas
