@@ -2,3 +2,4 @@ kaggle
 tensorflow==2.0.0-beta1
 matplotlib
 pandas
+Pillow
