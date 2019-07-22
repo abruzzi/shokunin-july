@@ -1,5 +1,6 @@
+import pandas as pd
 import tensorflow as tf
-from tensorflow import keras  # tensorflow implementation of keras
+from tensorflow import keras
 import matplotlib.pyplot as plt
 
 fashion_mnist = keras.datasets.fashion_mnist
@@ -19,18 +20,16 @@ model.add(keras.layers.Dense(100, activation="relu"))
 model.add(keras.layers.Dense(10, activation="softmax"))
 
 model.compile(loss=keras.losses.sparse_categorical_crossentropy,
-optimizer="sgd", metrics=["accuracy"])
+              optimizer="sgd", metrics=["accuracy"])
 
 history = model.fit(X_train, y_train,
-epochs=30, validation_data=(X_valid, y_valid))
+                    epochs=30, validation_data=(X_valid, y_valid))
 
-import pandas as pd
 
 pd.DataFrame(history.history).plot(figsize=(8, 5))
 plt.grid(True)
-plt.gca().set_ylim(0, 1) # set the vertical range to [0-1]
+plt.gca().set_ylim(0, 1)  # set the vertical range to [0-1]
 plt.show()
 
 # save your model as HDF5 format
 model.save("my_keras_model.h5")
-
