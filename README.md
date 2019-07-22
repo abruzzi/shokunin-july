@@ -15,5 +15,5 @@ pyenv init
 pyenv install 3.7.4
 pyenv local
 
-pip install kaggle
+pip install -r requirements.txt
 ```
