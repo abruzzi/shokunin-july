@@ -5,3 +5,4 @@ my_keras_model.h5
 .DS_Store
 Convolutional_Neural_Networks
 .vscode
+dataset
