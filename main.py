@@ -19,7 +19,7 @@ train_generator = train_datagen.flow_from_dataframe(
     batch_size=32,
     seed=42,
     shuffle=True,
-    class_mode="other",
+    class_mode="categorical",
     target_size=(64, 32))
 
 test_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
@@ -31,7 +31,7 @@ validation_generator = test_datagen.flow_from_dataframe(
     batch_size=32,
     seed=42,
     shuffle=True,
-    class_mode="other",
+    class_mode="categorical",
     target_size=(64, 32))
 
 df_test = pd.read_csv("./synimg/test/data_nostyle.csv")
@@ -68,12 +68,18 @@ model.add(keras.layers.Dense(10, activation='sigmoid'))
 model.compile(loss=keras.losses.sparse_categorical_crossentropy,
               optimizer="sgd", metrics=["accuracy"])
 
+STEP_SIZE_TRAIN = train_generator.n//train_generator.batch_size
+STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
+
+print(STEP_SIZE_TRAIN)
+print(STEP_SIZE_VALID)
+
 history = model.fit_generator(
     train_generator,
-    steps_per_epoch=2000,
+    steps_per_epoch=STEP_SIZE_TRAIN,
     epochs=50,
     validation_data=validation_generator,
-    validation_steps=800)
+    validation_steps=STEP_SIZE_VALID)
 
 pd.DataFrame(history.history).plot(figsize=(8, 5))
 plt.grid(True)
