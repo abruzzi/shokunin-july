@@ -7,9 +7,12 @@ import numpy as np
 
 df_train = pd.read_csv("./synimg/train/data.csv")
 
-datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
+train_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255,
+                                                             shear_range=0.2,
+                                                             zoom_range=0.2,
+                                                             horizontal_flip=True)
 
-train_generator = datagen.flow_from_dataframe(
+train_generator = train_datagen.flow_from_dataframe(
     dataframe=df_train[:80000],
     x_col="filepath",
     y_col="style_name",
@@ -21,7 +24,7 @@ train_generator = datagen.flow_from_dataframe(
 
 test_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
 
-valid_generator = test_datagen.flow_from_dataframe(
+validation_generator = test_datagen.flow_from_dataframe(
     dataframe=df_train[80000:],
     x_col="filepath",
     y_col="style_name",
@@ -43,7 +46,8 @@ test_generator = test_datagen.flow_from_dataframe(
     target_size=(64, 32))
 
 model = keras.models.Sequential()
-model.add(keras.layers.Conv2D(32, (3, 3), padding='same', input_shape=(64, 32, 3)))
+model.add(keras.layers.Conv2D(
+    32, (3, 3), padding='same', input_shape=(64, 32, 3)))
 model.add(keras.layers.Activation('relu'))
 model.add(keras.layers.Conv2D(32, (3, 3)))
 model.add(keras.layers.Activation('relu'))
@@ -59,16 +63,17 @@ model.add(keras.layers.Flatten())
 model.add(keras.layers.Dense(512))
 model.add(keras.layers.Activation('relu'))
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(5, activation='sigmoid'))
-model.compile(optimizer="sgd",
-              loss="binary_crossentropy", metrics=["accuracy"])
+model.add(keras.layers.Dense(10, activation='sigmoid'))
+
+model.compile(loss=keras.losses.sparse_categorical_crossentropy,
+              optimizer="sgd", metrics=["accuracy"])
 
 history = model.fit_generator(
-        train_generator,
-        steps_per_epoch=2000,
-        epochs=50,
-        validation_data=validation_generator,
-        validation_steps=800)
+    train_generator,
+    steps_per_epoch=2000,
+    epochs=50,
+    validation_data=validation_generator,
+    validation_steps=800)
 
 pd.DataFrame(history.history).plot(figsize=(8, 5))
 plt.grid(True)
