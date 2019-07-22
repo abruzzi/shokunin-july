@@ -9,7 +9,7 @@ kaggle competitions download -c synthetic-image-classification
 ## Environment 
 
 ```sh
-brew install pyenv
+brew install pyenv xz
 pyenv init
 # copy the output of above into .zhsrc (or whatever shell you use)
 
