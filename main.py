@@ -7,34 +7,34 @@ import numpy as np
 
 df_train = pd.read_csv("./synimg/train/data.csv")
 
-train_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255,
-                                                             shear_range=0.2,
-                                                             zoom_range=0.2,
-                                                             horizontal_flip=True)
+datagen = keras.preprocessing.image.ImageDataGenerator(
+    rescale=1./255., validation_split=0.2)
 
-train_generator = train_datagen.flow_from_dataframe(
-    dataframe=df_train[:80000],
+train_generator = datagen.flow_from_dataframe(
+    dataframe=df_train,
     x_col="filepath",
     y_col="style_name",
+    subset="training",
     batch_size=32,
     seed=42,
     shuffle=True,
     class_mode="categorical",
     target_size=(64, 32))
 
-test_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
 
-validation_generator = test_datagen.flow_from_dataframe(
-    dataframe=df_train[80000:],
+validation_generator = datagen.flow_from_dataframe(
+    dataframe=df_train,
     x_col="filepath",
     y_col="style_name",
     batch_size=32,
     seed=42,
     shuffle=True,
+    subset="validation",
     class_mode="categorical",
     target_size=(64, 32))
 
 df_test = pd.read_csv("./synimg/test/data_nostyle.csv")
+test_datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255.)
 
 test_generator = test_datagen.flow_from_dataframe(
     dataframe=df_test,
@@ -45,39 +45,44 @@ test_generator = test_datagen.flow_from_dataframe(
     class_mode=None,
     target_size=(64, 32))
 
-model = keras.models.Sequential()
-model.add(keras.layers.Conv2D(
-    32, (3, 3), padding='same', input_shape=(64, 32, 3)))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.Conv2D(32, (3, 3)))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-model.add(keras.layers.Dropout(0.25))
-model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.Conv2D(64, (3, 3)))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-model.add(keras.layers.Dropout(0.25))
-model.add(keras.layers.Flatten())
-model.add(keras.layers.Dense(512))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(10, activation='sigmoid'))
+labels = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
+          'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
+
+model = tf.keras.Sequential([
+    keras.layers.Conv2D(64, (3, 3), padding='same', input_shape=(64, 32, 3)),
+    keras.layers.GlobalAveragePooling2D(),
+    keras.layers.Dense(len(labels))])
+
+# model = keras.models.Sequential()
+# model.add(keras.layers.Conv2D(
+#     32, (3, 3), padding='same', input_shape=(64, 32, 3)))
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.Conv2D(32, (3, 3)))
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+# model.add(keras.layers.Dropout(0.25))
+# model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.Conv2D(64, (3, 3)))
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+# model.add(keras.layers.Dropout(0.25))
+# model.add(keras.layers.Flatten())
+# model.add(keras.layers.Dense(512))
+# model.add(keras.layers.Activation('relu'))
+# model.add(keras.layers.Dropout(0.5))
+# model.add(keras.layers.Dense(10, activation='sigmoid'))
 
 model.compile(loss=keras.losses.sparse_categorical_crossentropy,
-              optimizer="sgd", metrics=["accuracy"])
+              optimizer="adam", metrics=["accuracy"])
 
 STEP_SIZE_TRAIN = train_generator.n//train_generator.batch_size
 STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
 
-print(STEP_SIZE_TRAIN)
-print(STEP_SIZE_VALID)
-
 history = model.fit_generator(
-    train_generator,
+    generator=train_generator,
     steps_per_epoch=STEP_SIZE_TRAIN,
-    epochs=50,
+    epochs=10,
     validation_data=validation_generator,
     validation_steps=STEP_SIZE_VALID)
 
