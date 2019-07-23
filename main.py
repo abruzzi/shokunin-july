@@ -1,10 +1,41 @@
 import tensorflow as tf
 from tensorflow import keras
 
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
+labels = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
+          'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
+
+# define the model
+model = keras.models.Sequential()
+model.add(keras.layers.Conv2D(
+    32, (3, 3), padding='same', input_shape=(64, 32, 3)))
+model.add(keras.layers.Activation('relu'))
+
+model.add(keras.layers.Conv2D(32, (3, 3)))
+model.add(keras.layers.Activation('relu'))
+model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+model.add(keras.layers.Dropout(0.25))
+
+model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
+model.add(keras.layers.Activation('relu'))
+
+model.add(keras.layers.Conv2D(64, (3, 3)))
+model.add(keras.layers.Activation('relu'))
+model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+model.add(keras.layers.Dropout(0.25))
+
+model.add(keras.layers.Flatten())
+model.add(keras.layers.Dense(256))
+model.add(keras.layers.Activation('relu'))
+model.add(keras.layers.Dropout(0.5))
+model.add(keras.layers.Dense(len(labels), activation='sigmoid'))
+
+model.compile(loss=keras.losses.sparse_categorical_crossentropy,
+              optimizer="adam", metrics=["accuracy"])
+
+
+# prepare data
 df_train = pd.read_csv("./synimg/train/data.csv")
 
 datagen = keras.preprocessing.image.ImageDataGenerator(
@@ -45,40 +76,10 @@ test_generator = test_datagen.flow_from_dataframe(
     class_mode=None,
     target_size=(64, 32))
 
-labels = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
-          'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
-
-model = tf.keras.Sequential([
-    keras.layers.Conv2D(64, (3, 3), padding='same', input_shape=(64, 32, 3)),
-    keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dense(len(labels))])
-
-# model = keras.models.Sequential()
-# model.add(keras.layers.Conv2D(
-#     32, (3, 3), padding='same', input_shape=(64, 32, 3)))
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.Conv2D(32, (3, 3)))
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-# model.add(keras.layers.Dropout(0.25))
-# model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.Conv2D(64, (3, 3)))
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-# model.add(keras.layers.Dropout(0.25))
-# model.add(keras.layers.Flatten())
-# model.add(keras.layers.Dense(512))
-# model.add(keras.layers.Activation('relu'))
-# model.add(keras.layers.Dropout(0.5))
-# model.add(keras.layers.Dense(10, activation='sigmoid'))
-
-model.compile(loss=keras.losses.sparse_categorical_crossentropy,
-              optimizer="adam", metrics=["accuracy"])
-
 STEP_SIZE_TRAIN = train_generator.n//train_generator.batch_size
 STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
 
+# fit
 history = model.fit_generator(
     generator=train_generator,
     steps_per_epoch=STEP_SIZE_TRAIN,
@@ -86,9 +87,7 @@ history = model.fit_generator(
     validation_data=validation_generator,
     validation_steps=STEP_SIZE_VALID)
 
-pd.DataFrame(history.history).plot(figsize=(8, 5))
-plt.grid(True)
-plt.gca().set_ylim(0, 1)
-plt.show()
+print(history.history)
 
+# save
 model.save("shokunin-july.h5")
