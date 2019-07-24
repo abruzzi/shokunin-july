@@ -8,32 +8,19 @@ labels = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
 
 # define the model
 model = keras.models.Sequential()
-model.add(keras.layers.Conv2D(
-    32, (3, 3), padding='same', input_shape=(64, 32, 3)))
-model.add(keras.layers.Activation('relu'))
-
-model.add(keras.layers.Conv2D(32, (3, 3)))
-model.add(keras.layers.Activation('relu'))
-model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-model.add(keras.layers.Dropout(0.25))
-
-model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
-model.add(keras.layers.Activation('relu'))
-
-model.add(keras.layers.Conv2D(64, (3, 3)))
-model.add(keras.layers.Activation('relu'))
+model.add(keras.layers.Conv2D(32, kernel_size=(3, 3),
+                              activation='relu', input_shape=(64, 32, 3)))
+model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
 model.add(keras.layers.Dropout(0.25))
 
 model.add(keras.layers.Flatten())
-model.add(keras.layers.Dense(256))
-model.add(keras.layers.Activation('relu'))
+model.add(keras.layers.Dense(128, activation='relu'))
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(len(labels), activation='sigmoid'))
+model.add(keras.layers.Dense(len(labels), activation='softmax'))
 
-model.compile(loss=keras.losses.sparse_categorical_crossentropy,
+model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer="adam", metrics=["accuracy"])
-
 
 # prepare data
 df_train = pd.read_csv("./synimg/train/data.csv")
