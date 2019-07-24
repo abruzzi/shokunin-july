@@ -70,7 +70,7 @@ STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
 history = model.fit_generator(
     generator=train_generator,
     steps_per_epoch=STEP_SIZE_TRAIN,
-    epochs=10,
+    epochs=20,
     validation_data=validation_generator,
     validation_steps=STEP_SIZE_VALID)
 
