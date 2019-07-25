@@ -15,12 +15,16 @@ def create_model():
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, kernel_size=(3, 3),
                                   activation='relu', input_shape=(64, 32, 3)))
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(keras.layers.Dropout(0.25))
+
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(keras.layers.Dropout(0.25))
 
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(128, activation='relu'))
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(len(LABELS), activation='softmax'))
 
@@ -38,9 +42,9 @@ def create_train_data_sets():
     df_train = pd.read_csv("./synimg/train/data.csv")
 
     datagen = keras.preprocessing.image.ImageDataGenerator(
-        rescale=1./255.,
-        rotation_range=20,
+        rotation_range=12,
         brightness_range=[0.5, 1.0],
+        zoom_range=0.1,
         width_shift_range=0.2,
         height_shift_range=0.2,
         validation_split=0.25)
