@@ -8,7 +8,7 @@ from tqdm import tqdm
 HEADER = "id,style_name"
 RESULT_FILE = "submission.csv"
 
-model = keras.models.load_model('models/shokunin-july.h5')
+model = keras.models.load_model('models/shokunin-july-32.h5')
 
 
 def load_test_data():
