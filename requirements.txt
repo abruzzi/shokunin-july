@@ -3,3 +3,4 @@ tensorflow==2.0.0-beta1
 matplotlib
 pandas
 Pillow
+git+https://github.com/qubvel/efficientnet

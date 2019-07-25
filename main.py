@@ -1,10 +1,29 @@
 import tensorflow as tf
 from tensorflow import keras
+from efficientnet.tfkeras import EfficientNetB3
 
 import pandas as pd
 
 LABELS = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
           'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
+
+
+def create_model_effnetb3():
+    effnetb3 = EfficientNetB3(
+        weights='imagenet', include_top=False, input_shape=(64, 32, 3))
+
+    x = effnetb3.output
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dense(256, activation="relu")(x)
+    x = keras.layers.Dropout(0.5)(x)
+
+    predictions = keras.layers.Dense(len(LABELS), activation="softmax")(x)
+    model = keras.models.Model(inputs=effnetb3.input, outputs=predictions)
+
+    model.compile(optimizer=keras.optimizers.RMSprop(lr=0.0001, decay=1e-6),
+                  loss=keras.losses.categorical_crossentropy, metrics=['accuracy'])
+
+    return model
 
 
 def create_model():
@@ -15,10 +34,6 @@ def create_model():
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, kernel_size=(3, 3),
                                   activation='relu', input_shape=(64, 32, 3)))
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Dropout(0.25))
-
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(keras.layers.Dropout(0.25))
@@ -29,7 +44,7 @@ def create_model():
     model.add(keras.layers.Dense(len(LABELS), activation='softmax'))
 
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer="adam", metrics=["accuracy"])
+                  optimizer=keras.optimizers.RMSprop(lr=0.001, rho=0.9, epsilon=None, decay=0.0), metrics=["accuracy"])
 
     return model
 
@@ -84,7 +99,7 @@ def train(filename):
     STEP_SIZE_TRAIN = train_generator.n//train_generator.batch_size
     STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
 
-    model = create_model()
+    model = create_model_effnetb3()
     # fit
     history = model.fit_generator(
         generator=train_generator,
