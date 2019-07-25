@@ -1,5 +1,8 @@
 from tensorflow import keras
 
+from efficientnet.tfkeras import center_crop_and_resize, preprocess_input
+from tensorflow.keras.models import load_model
+
 import pandas as pd
 from keras.preprocessing import image
 import numpy as np
@@ -8,7 +11,7 @@ from tqdm import tqdm
 HEADER = "id,style_name"
 RESULT_FILE = "submission.csv"
 
-model = keras.models.load_model('models/shokunin-july-10.h5')
+model = load_model('models/shokunin-july-32-netb3.h5')
 
 
 def load_test_data():
