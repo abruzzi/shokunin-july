@@ -39,31 +39,45 @@ def create_train_data_sets():
     define the generator for loading training data sets
     """
 
+    batch_size = 256
+
     df_train = pd.read_csv("./synimg/train/data.csv")
+    df_train = df_train.sample(frac=1.0)
+
+    train_data = df_train[:80000]
+    validation_data = df_train[80000:]
+
+    print(len(train_data))
+    print(len(validation_data))
 
     train_gen = keras.preprocessing.image.ImageDataGenerator(
         rescale=1./255.,
-        validation_split=0.25)
+        horizontal_flip=True,
+        zoom_range=0.2,
+        width_shift_range=0.2,
+        height_shift_range=0.2
+    )
+
+    validation_gen = keras.preprocessing.image.ImageDataGenerator(
+        rescale=1./255.)
 
     train_generator = train_gen.flow_from_dataframe(
-        dataframe=df_train,
+        dataframe=train_data,
         x_col="filepath",
         y_col="style_name",
-        subset="training",
-        batch_size=32,
+        batch_size=batch_size,
         seed=42,
         shuffle=True,
         class_mode="categorical",
         target_size=(256, 128))
 
-    validation_generator = train_gen.flow_from_dataframe(
-        dataframe=df_train,
+    validation_generator = validation_gen.flow_from_dataframe(
+        dataframe=validation_data,
         x_col="filepath",
         y_col="style_name",
-        batch_size=32,
+        batch_size=batch_size,
         seed=42,
         shuffle=True,
-        subset="validation",
         class_mode="categorical",
         target_size=(256, 128))
 
