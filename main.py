@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-from efficientnet.tfkeras import EfficientNetB3
+from tensorflow.keras.applications import InceptionResNetV2
 
 import pandas as pd
 
@@ -8,50 +8,28 @@ LABELS = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
           'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
 
 
-def create_model_effnetb3():
-    effnetb3 = EfficientNetB3(
-        weights='imagenet', include_top=False, input_shape=(64, 32, 3))
-
-    x = effnetb3.output
-    x = keras.layers.Flatten()(x)
-    x = keras.layers.Dense(256, activation="relu")(x)
-    x = keras.layers.Dropout(0.5)(x)
-
-    predictions = keras.layers.Dense(len(LABELS), activation="softmax")(x)
-    model = keras.models.Model(inputs=effnetb3.input, outputs=predictions)
-
-    model.compile(optimizer=keras.optimizers.RMSprop(lr=0.0001, decay=1e-6),
-                  loss=keras.losses.categorical_crossentropy, metrics=['accuracy'])
-
-    return model
-
-
 def create_model():
     """
     define the model
     """
 
+    conv_base = InceptionResNetV2(
+        weights="imagenet", include_top=False, input_shape=(256, 128, 3))
+
     model = keras.models.Sequential()
-    model.add(keras.layers.Conv2D(32, kernel_size=(3, 3),
-                                  activation='relu', input_shape=(64, 32, 3)))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Dropout(0.25))
-
-    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Dropout(0.25))
-
-    model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Dropout(0.25))
+    model.add(conv_base)
 
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(512, activation='relu'))
+    model.add(keras.layers.Dense(256, activation='relu'))
     model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(len(LABELS), activation='softmax'))
 
+    model.summary()
+    conv_base.trainable = False
+
+    opt = keras.optimizers.RMSprop(lr=2e-5)
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer="adam", metrics=["accuracy"])
+                  optimizer=opt, metrics=["accuracy"])
 
     return model
 
@@ -63,11 +41,11 @@ def create_train_data_sets():
 
     df_train = pd.read_csv("./synimg/train/data.csv")
 
-    datagen = keras.preprocessing.image.ImageDataGenerator(
+    train_gen = keras.preprocessing.image.ImageDataGenerator(
         rescale=1./255.,
         validation_split=0.25)
 
-    train_generator = datagen.flow_from_dataframe(
+    train_generator = train_gen.flow_from_dataframe(
         dataframe=df_train,
         x_col="filepath",
         y_col="style_name",
@@ -76,9 +54,9 @@ def create_train_data_sets():
         seed=42,
         shuffle=True,
         class_mode="categorical",
-        target_size=(64, 32))
+        target_size=(256, 128))
 
-    validation_generator = datagen.flow_from_dataframe(
+    validation_generator = train_gen.flow_from_dataframe(
         dataframe=df_train,
         x_col="filepath",
         y_col="style_name",
@@ -87,7 +65,7 @@ def create_train_data_sets():
         shuffle=True,
         subset="validation",
         class_mode="categorical",
-        target_size=(64, 32))
+        target_size=(256, 128))
 
     return (train_generator, validation_generator)
 
@@ -107,7 +85,7 @@ def train(filename):
     history = model.fit_generator(
         generator=train_generator,
         steps_per_epoch=STEP_SIZE_TRAIN,
-        epochs=50,
+        epochs=10,
         validation_data=validation_generator,
         validation_steps=STEP_SIZE_VALID)
 
@@ -115,4 +93,4 @@ def train(filename):
     model.save(filename)
 
 
-train("shokunin-july-50.h5")
+train("shokunin-july-incption.h5")
