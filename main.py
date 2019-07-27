@@ -34,17 +34,24 @@ def create_model():
     model = keras.models.Sequential()
     model.add(keras.layers.Conv2D(32, kernel_size=(3, 3),
                                   activation='relu', input_shape=(64, 32, 3)))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(keras.layers.Dropout(0.25))
+
+    model.add(keras.layers.Conv2D(32, (3, 3), activation='relu'))
+    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(keras.layers.Dropout(0.25))
+
     model.add(keras.layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(keras.layers.Dropout(0.25))
 
     model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(256, activation='relu'))
+    model.add(keras.layers.Dense(512, activation='relu'))
     model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(len(LABELS), activation='softmax'))
 
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer=keras.optimizers.RMSprop(lr=0.001, rho=0.9, epsilon=None, decay=0.0), metrics=["accuracy"])
+                  optimizer="adam", metrics=["accuracy"])
 
     return model
 
@@ -57,11 +64,7 @@ def create_train_data_sets():
     df_train = pd.read_csv("./synimg/train/data.csv")
 
     datagen = keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=12,
-        brightness_range=[0.5, 1.0],
-        zoom_range=0.1,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
+        rescale=1./255.,
         validation_split=0.25)
 
     train_generator = datagen.flow_from_dataframe(
@@ -99,12 +102,12 @@ def train(filename):
     STEP_SIZE_TRAIN = train_generator.n//train_generator.batch_size
     STEP_SIZE_VALID = validation_generator.n//validation_generator.batch_size
 
-    model = create_model_effnetb3()
+    model = create_model()
     # fit
     history = model.fit_generator(
         generator=train_generator,
         steps_per_epoch=STEP_SIZE_TRAIN,
-        epochs=10,
+        epochs=50,
         validation_data=validation_generator,
         validation_steps=STEP_SIZE_VALID)
 
@@ -112,4 +115,4 @@ def train(filename):
     model.save(filename)
 
 
-train("shokunin-july-32.h5")
+train("shokunin-july-50.h5")
