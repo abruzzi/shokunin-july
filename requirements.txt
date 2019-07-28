@@ -1,6 +1,8 @@
 kaggle
 tensorflow==2.0.0-beta1
+Keras
 matplotlib
 pandas
-Pillow
+scikit-learn
 git+https://github.com/qubvel/efficientnet
+jupyterlab

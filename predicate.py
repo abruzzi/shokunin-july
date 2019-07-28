@@ -1,49 +1,54 @@
-from tensorflow import keras
+from keras.models import load_model
+from sklearn.preprocessing import LabelEncoder
+from constants import *
 
-from efficientnet.tfkeras import center_crop_and_resize, preprocess_input
-from tensorflow.keras.models import load_model
-
-import pandas as pd
-from keras.preprocessing import image
-import numpy as np
-from tqdm import tqdm
-
-HEADER = "id,style_name"
-RESULT_FILE = "submission.csv"
-
-model = load_model('models/shokunin-july-32-netb3.h5')
+styles_encoder = LabelEncoder().fit(LABELS)
 
 
-def load_test_data():
-    test_input_csv = pd.read_csv("./synimg/test/data_nostyle.csv")
-    test_image = []
-    for i in tqdm(range(test_input_csv.shape[0])):
-        img = image.load_img(test_input_csv['filepath'][i], target_size=(64, 32, 3), grayscale=False)
-        img = image.img_to_array(img)
-        img = img / 255
-        test_image.append(img)
-    return np.expand_dims(np.array(test_image), 1)
+def predict(model):
+    df_test = pd.read_csv("./synimg/test/data_nostyle.csv")
+
+    test_datagen = ImageDataGenerator(rescale=1./255.)
+
+    test_generator = test_datagen.flow_from_dataframe(
+        dataframe=df_test,
+        directory="./",
+        x_col="filepath",
+        target_size=(32, 64),
+        color_mode="rgb",
+        batch_size=BATCH_SIZE,
+        class_mode=None,
+        shuffle=False
+    )
+
+    test_generator.reset()
+    return model.predict_generator(test_generator, verbose=1, steps=312)
 
 
-def style_of(img):
-    labels = ['Luanda', 'HongKong', 'Zurich', 'Singapore', 'Geneva',
-              'Beijing', 'Seoul', 'Sydney', 'Melbourne', 'Brisbane']
-
+def style_of(predication):
     def possibility_of(item):
         return item.get('possibility')
 
-    prediction = model.predict(img)
-    predict_results = np.round(prediction[0], 2)
-    labeled = [{'label': labels[index], 'possibility': possibility} for (index, possibility) in
-               enumerate(predict_results)]
+    labeled = [{'label': styles_encoder.inverse_transform([index])[0], 'possibility': possibility} for (index, possibility) in
+               enumerate(predication)]
+
     return max(labeled, key=possibility_of)
 
 
-test_input = load_test_data()
+def summarize_prediction(predications):
+    labels = map(lambda x: style_of(x)['label'], predications)
+    zipped = dict(zip(df_test.id, labels))
 
-with open(RESULT_FILE, "w") as f:
-    f.write(HEADER)
-    for (file_id, img) in enumerate(test_input, start=9000000):
-        style = style_of(img)['label']
-        f.write("\n")
-        f.write(f"{file_id},{style}")
+    return [{"id": k, "style_name": v} for k, v in zipped.items()]
+
+
+def generate_submission():
+    model = load_model(MODEL)
+    predication = predict(model)
+    submission = pd.DataFrame(summarize_prediction(predications))
+
+    submission.style_name.value_counts().plot.bar()
+    submission.to_csv(SUBMISSION, index=False)
+
+
+generate_submission()

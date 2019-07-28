@@ -22,3 +22,12 @@ pyenv local
 ```sh
 pip install -r requirements.txt
 ```
+
+### Review the data exploration journey interactively
+
+There is a notebook `shokunin-july-thoughtworks.ipynb`, you can launch `jupyter` locally to have a deep look of how the exploration was.
+
+```sh
+jupyter notebook
+```
+
