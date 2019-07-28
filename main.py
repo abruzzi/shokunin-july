@@ -61,6 +61,10 @@ def create_train_data_sets():
 
 
 def build_model():
+    """
+    build a model based on EfficientNetB3 and a simple 10 output full-connected-netwrok
+    """
+
     input_shape = (32, 64, 3)
 
     efficient_net = EfficientNetB3(
@@ -83,6 +87,10 @@ def build_model():
 
 
 def training():
+    """
+    Hook them up, and do the actually training...
+    """
+
     model = build_model()
 
     reduce_lr = ReduceLROnPlateau(monitor='val_acc', factor=0.5, patience=2,

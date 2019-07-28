@@ -31,3 +31,9 @@ There is a notebook `shokunin-july-thoughtworks.ipynb`, you can launch `jupyter`
 jupyter notebook
 ```
 
+### Code Structure
+
+- `main.py` for training the model
+- `predicate.py` for using the model for predication and generate output
+
+We're employing [`EfficientNetB3` model](https://arxiv.org/abs/1905.11946) as the first half of the classification, and the simple `full-connected-network` to classify different labels.

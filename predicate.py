@@ -2,10 +2,12 @@ from keras.models import load_model
 from sklearn.preprocessing import LabelEncoder
 from constants import *
 
-styles_encoder = LabelEncoder().fit(LABELS)
-
 
 def predict(model):
+    """
+    Load test data set and make the predication
+    """
+
     df_test = pd.read_csv("./synimg/test/data_nostyle.csv")
 
     test_datagen = ImageDataGenerator(rescale=1./255.)
@@ -26,11 +28,16 @@ def predict(model):
 
 
 def style_of(predication):
+    """
+    Convert index in predication to labels
+    """
+    styles_encoder = LabelEncoder().fit(LABELS)
+
     def possibility_of(item):
         return item.get('possibility')
 
-    labeled = [{'label': styles_encoder.inverse_transform([index])[0], 'possibility': possibility} for (index, possibility) in
-               enumerate(predication)]
+    labeled = [{'label': styles_encoder.inverse_transform([index])[0], 'possibility': possibility}
+               for (index, possibility) in enumerate(predication)]
 
     return max(labeled, key=possibility_of)
 
@@ -47,7 +54,6 @@ def generate_submission():
     predication = predict(model)
     submission = pd.DataFrame(summarize_prediction(predications))
 
-    submission.style_name.value_counts().plot.bar()
     submission.to_csv(SUBMISSION, index=False)
 
 
